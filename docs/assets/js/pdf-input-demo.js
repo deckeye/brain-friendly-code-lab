@@ -1133,8 +1133,8 @@ function initInlineHints() {
         });
         
         // 他の場所をクリックしたらピン解除
-        document.addEventListener('click', () => {
-            if (isPinned && !hint.contains(event.target)) {
+        document.addEventListener('click', (e) => {
+            if (isPinned && !hint.contains(e.target)) {
                 isPinned = false;
                 hint.classList.remove('active');
             }
