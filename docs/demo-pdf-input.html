@@ -200,50 +200,13 @@
             display: block;
         }
 
-        /* レイアウト: オーバーレイ（改善版） */
+        /* レイアウト: オーバーレイ（改善版・最初から表示） */
         .layout-overlay {
             position: relative;
+            padding-bottom: 55vh; /* オーバーレイの50vh + 余裕の5vh */
         }
 
-        .overlay-btn {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: white;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-            transition: all 0.3s;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .overlay-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.6);
-        }
-
-        .overlay-btn-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: var(--success);
-            color: white;
-            border-radius: 12px;
-            padding: 0.2rem 0.4rem;
-            font-size: 0.7rem;
-            font-weight: bold;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
+        /* オーバーレイフォーム（最初から50%表示） */
         .overlay-form {
             position: fixed;
             bottom: 0;
@@ -251,18 +214,25 @@
             right: 0;
             background: white;
             box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
             z-index: 99;
-            max-height: 70vh;
-            overflow: hidden;
+            height: 50vh; /* 画面の50%を固定 */
             border-radius: 12px 12px 0 0;
+            transition: height 0.3s ease;
+            display: flex;
+            flex-direction: column;
         }
 
-        .overlay-form.active {
-            transform: translateY(0);
+        /* 展開状態: 70%まで拡大 */
+        .overlay-form.expanded {
+            height: 70vh;
         }
 
+        /* 最小化状態: 下端のバーのみ表示 */
+        .overlay-form.minimized {
+            height: 60px;
+        }
+
+        /* オーバーレイヘッダー（トグルボタン含む） */
         .overlay-header {
             padding: 1rem 2rem;
             border-bottom: 1px solid var(--border);
@@ -270,26 +240,62 @@
             justify-content: space-between;
             align-items: center;
             background: #f7fafc;
+            cursor: pointer;
+            user-select: none;
+            flex-shrink: 0; /* ヘッダーは縮まない */
         }
 
-        .overlay-close-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
+        .overlay-header:hover {
+            background: #edf2f7;
+        }
+
+        /* トグルボタン（右側の>>マーク） */
+        .overlay-toggle-btn {
+            background: none;
             border: none;
-            background: transparent;
             font-size: 1.5rem;
+            color: var(--text);
             cursor: pointer;
+            transition: transform 0.3s;
+            padding: 0.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s;
-            color: var(--text-light);
         }
 
-        .overlay-close-btn:hover {
-            background: #e2e8f0;
-            color: var(--text);
+        .overlay-toggle-btn:hover {
+            color: var(--primary);
+        }
+
+        /* 展開時は上向き、最小化時は下向き */
+        .overlay-form.expanded .overlay-toggle-btn {
+            transform: rotate(90deg); /* >> を上向き ^ に */
+        }
+
+        .overlay-form.minimized .overlay-toggle-btn {
+            transform: rotate(-90deg); /* >> を下向き v に */
+        }
+
+        /* プログレスバッジ */
+        .overlay-progress-badge {
+            background: var(--success);
+            color: white;
+            border-radius: 12px;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.875rem;
+            font-weight: bold;
+        }
+
+        /* オーバーレイコンテンツエリア */
+        .overlay-content {
+            overflow-y: auto;
+            padding: 1.5rem 2rem;
+            flex: 1; /* 残りのスペースを占める */
+        }
+
+        /* 最小化時はコンテンツを非表示 */
+        .overlay-form.minimized .overlay-content {
+            display: none;
         }
 
         /* 自動整形通知 */

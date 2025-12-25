@@ -495,16 +495,17 @@ function renderOverlayLayout() {
             <div class="pdf-viewer" style="min-height: 100vh;">
                 ${renderPDFContent()}
             </div>
-            <button class="overlay-btn" id="overlayBtn" aria-label="入力フォームを開く">
-                ✏️
-                <span class="overlay-btn-badge">${getFilledCount()}/6</span>
-            </button>
             <div class="overlay-form" id="overlayForm">
-                <div class="overlay-header">
-                    <h3 style="margin: 0;">📝 データ入力</h3>
-                    <button class="overlay-close-btn" id="overlayCloseBtn" aria-label="閉じる">✕</button>
+                <div class="overlay-header" id="overlayHeader">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <h3 style="margin: 0;">📝 データ入力</h3>
+                        <span class="overlay-progress-badge">${getFilledCount()}/6</span>
+                    </div>
+                    <button class="overlay-toggle-btn" id="overlayToggleBtn" aria-label="フォームを展開・折りたたむ">
+                        »
+                    </button>
                 </div>
-                <div class="form-area" style="max-height: calc(70vh - 60px); padding-top: 1rem;">
+                <div class="overlay-content">
                     ${renderForm()}
                 </div>
             </div>
@@ -702,38 +703,58 @@ function initTabs() {
 
 // ===== オーバーレイの初期化（改善版） =====
 function initOverlay() {
-    const btn = document.getElementById('overlayBtn');
     const form = document.getElementById('overlayForm');
-    const closeBtn = document.getElementById('overlayCloseBtn');
+    const header = document.getElementById('overlayHeader');
+    const toggleBtn = document.getElementById('overlayToggleBtn');
     
-    // FABボタンでトグル
-    btn.addEventListener('click', () => {
-        const isActive = form.classList.contains('active');
-        form.classList.toggle('active');
-        btn.setAttribute('aria-expanded', !isActive);
-        
-        // バッジを更新
-        const badge = btn.querySelector('.overlay-btn-badge');
-        if (badge) {
-            badge.textContent = `${getFilledCount()}/6`;
-        }
-    });
+    // 状態管理: 'normal' (50%), 'expanded' (70%), 'minimized' (60px)
+    let state = 'normal'; // 初期状態は50%
     
-    // 閉じるボタン
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            form.classList.remove('active');
-            btn.setAttribute('aria-expanded', 'false');
+    // トグルボタンクリック
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleOverlay();
         });
     }
     
-    // 背景クリックで閉じる（オプション）
-    form.addEventListener('click', (e) => {
-        if (e.target === form) {
-            form.classList.remove('active');
-            btn.setAttribute('aria-expanded', 'false');
+    // ヘッダークリックでもトグル
+    if (header) {
+        header.addEventListener('click', () => {
+            toggleOverlay();
+        });
+    }
+    
+    function toggleOverlay() {
+        if (state === 'normal') {
+            // 50% → 70% に展開
+            form.classList.remove('minimized');
+            form.classList.add('expanded');
+            state = 'expanded';
+        } else if (state === 'expanded') {
+            // 70% → 60px に最小化
+            form.classList.remove('expanded');
+            form.classList.add('minimized');
+            state = 'minimized';
+        } else {
+            // 60px → 50% に戻す
+            form.classList.remove('minimized');
+            state = 'normal';
         }
-    });
+        
+        // プログレスバッジを更新
+        updateProgressBadge();
+    }
+    
+    function updateProgressBadge() {
+        const badge = document.querySelector('.overlay-progress-badge');
+        if (badge) {
+            badge.textContent = `${getFilledCount()}/6`;
+        }
+    }
+    
+    // 初期バッジ更新
+    updateProgressBadge();
 }
 
 // ===== フォーム入力の初期化（自動修正機能付き・IME対応） =====
