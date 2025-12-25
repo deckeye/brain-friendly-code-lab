@@ -705,15 +705,22 @@ function renderForm() {
                 <button class="settings-btn" id="dateSettingsBtn" title="日付フォーマット設定">⚙️</button>
             </label>
             <div style="display: flex; gap: 0.5rem; align-items: center;">
-                <input 
-                    type="text" 
-                    class="form-input" 
-                    id="invoiceDate"
-                    placeholder="${todayDisplay} (今日)"
-                    value="${formData.invoiceDate}"
-                    style="flex: 1;"
-                    list="invoiceDate-datalist"
-                >
+                <div class="form-field-wrapper" style="flex: 1;">
+                    <input 
+                        type="text" 
+                        class="form-input" 
+                        id="invoiceDate"
+                        placeholder="${todayDisplay} (今日)"
+                        value="${formData.invoiceDate}"
+                        list="invoiceDate-datalist"
+                    >
+                    <div class="inline-hint" data-hint="推奨: YYYY/MM/DD、YYYY-MM-DD、和暦も対応">
+                        <span>和暦・西暦対応</span>
+                    </div>
+                    <div class="error-icon" id="invoiceDate-error-icon" style="display: none;">⚠</div>
+                    <div class="error-tooltip" id="invoiceDate-error-tooltip"></div>
+                    <div class="error-annotation" id="invoiceDate-error-annotation"></div>
+                </div>
                 <input 
                     type="date" 
                     class="form-input" 
@@ -728,9 +735,6 @@ function renderForm() {
                 <option value="2025/12/25">2025/12/25</option>
                 <option value="令和6年12月25日">令和6年12月25日</option>
             </datalist>
-            <div class="hint-message show" id="invoiceDate-hint">💡 推奨: YYYY/MM/DD、YYYY-MM-DD、和暦も対応</div>
-            <div class="error-message" id="invoiceDate-error"></div>
-            <div class="success-message" id="invoiceDate-success"></div>
         </div>
         
         <div class="form-group">
@@ -738,15 +742,22 @@ function renderForm() {
                 支払期日 <span class="required">*</span>
             </label>
             <div style="display: flex; gap: 0.5rem; align-items: center;">
-                <input 
-                    type="text" 
-                    class="form-input" 
-                    id="dueDate"
-                    placeholder="${todayDisplay} (今日)"
-                    value="${formData.dueDate}"
-                    style="flex: 1;"
-                    list="dueDate-datalist"
-                >
+                <div class="form-field-wrapper" style="flex: 1;">
+                    <input 
+                        type="text" 
+                        class="form-input" 
+                        id="dueDate"
+                        placeholder="${todayDisplay} (今日)"
+                        value="${formData.dueDate}"
+                        list="dueDate-datalist"
+                    >
+                    <div class="inline-hint" data-hint="推奨: YYYY/MM/DD、YYYY-MM-DD、和暦も対応">
+                        <span>和暦・西暦対応</span>
+                    </div>
+                    <div class="error-icon" id="dueDate-error-icon" style="display: none;">⚠</div>
+                    <div class="error-tooltip" id="dueDate-error-tooltip"></div>
+                    <div class="error-annotation" id="dueDate-error-annotation"></div>
+                </div>
                 <input 
                     type="date" 
                     class="form-input" 
@@ -761,25 +772,27 @@ function renderForm() {
                 <option value="2025/12/25">2025/12/25</option>
                 <option value="令和6年12月25日">令和6年12月25日</option>
             </datalist>
-            <div class="hint-message show">💡 推奨: YYYY/MM/DD、YYYY-MM-DD、和暦も対応</div>
-            <div class="error-message" id="dueDate-error"></div>
-            <div class="success-message" id="dueDate-success"></div>
         </div>
         
         <div class="form-group">
             <label class="form-label">
                 金額 <span class="required">*</span>
             </label>
-            <input 
-                type="text" 
-                class="form-input" 
-                id="amount"
-                placeholder="例: 1250000"
-                value="${formData.amount}"
-            >
-            <div class="hint-message show">💡 ¥や,（カンマ）は自動で削除されます</div>
-            <div class="error-message" id="amount-error"></div>
-            <div class="success-message" id="amount-success"></div>
+            <div class="form-field-wrapper">
+                <input 
+                    type="text" 
+                    class="form-input" 
+                    id="amount"
+                    placeholder="例: 1250000"
+                    value="${formData.amount}"
+                >
+                <div class="inline-hint" data-hint="¥や,（カンマ）は自動で削除されます">
+                    <span>¥・カンマ自動削除</span>
+                </div>
+                <div class="error-icon" id="amount-error-icon" style="display: none;">⚠</div>
+                <div class="error-tooltip" id="amount-error-tooltip"></div>
+                <div class="error-annotation" id="amount-error-annotation"></div>
+            </div>
         </div>
         
         <div class="form-group">
@@ -790,7 +803,6 @@ function renderForm() {
                 rows="3"
                 placeholder="必要に応じて備考を入力"
             >${formData.notes}</textarea>
-            <div class="success-message" id="notes-success"></div>
         </div>
         
         <div class="form-actions">
