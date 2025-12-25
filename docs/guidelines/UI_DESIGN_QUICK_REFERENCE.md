@@ -506,6 +506,139 @@ useEffect(() => {
 
 ---
 
+## 🎯 レイアウトシフト防止（CLS対策）
+
+### ⚠️ 問題: display: none/block
+
+```tsx
+// ❌ 悪い例: レイアウトが動く（CLSスコア悪化）
+<div style={{ display: error ? 'block' : 'none' }}>
+  {error}
+</div>
+```
+
+**影響:**
+- CLS（Cumulative Layout Shift）スコア: **0.25以上**（不良）
+- 次のフィールドがずれる
+- 誤クリックの原因
+- 認知負荷の増加
+
+### ✅ 解決策: opacity + min-height
+
+```tsx
+// ✅ 良い例: レイアウト固定（CLSスコア 0.0）
+const FormField = () => {
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
+
+  return (
+    <div className="form-field">
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        className={error ? 'invalid' : ''}
+      />
+      {/* 常に領域確保、opacityで制御 */}
+      <div className={`error-message ${error ? 'show' : ''}`}>
+        {error || '\u00A0'}
+      </div>
+    </div>
+  );
+};
+```
+
+### CSS
+
+```css
+.error-message {
+  min-height: 1.5rem; /* 固定高さ */
+  opacity: 0;         /* デフォルト透明 */
+  transition: opacity 0.3s ease;
+  display: block;     /* 常に表示 */
+  font-size: 0.875rem;
+  color: #ff5252;
+  margin-bottom: 0.5rem;
+}
+
+.error-message.show {
+  opacity: 1; /* 表示時のみ不透明 */
+}
+
+.form-field input.invalid {
+  border-color: #ff5252;
+  background-color: #fff5f5;
+}
+```
+
+### CLSスコア評価基準
+
+| スコア | 評価 | ユーザー体験 |
+|---|---|---|
+| **< 0.1** | ✅ 良好 | ストレスなし |
+| **0.1-0.25** | ⚠️ 改善必要 | やや気になる |
+| **> 0.25** | ❌ 不良 | イライラ |
+
+**目標:** **0.05以下**（優秀）
+
+### 測定方法
+
+```javascript
+// web-vitals でCLS測定
+import { getCLS } from 'web-vitals';
+
+getCLS((metric) => {
+  console.log('CLS:', metric.value);
+  // 良好: < 0.1
+});
+```
+
+### 代替手法
+
+#### 1. 絶対配置
+
+```css
+.form-field {
+  position: relative;
+  margin-bottom: 3rem;
+}
+
+.error-message {
+  position: absolute;
+  bottom: -1.5rem;
+  left: 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+```
+
+#### 2. トースト通知（複数フィールド向け）
+
+```tsx
+// 画面上部に固定表示
+const Toast = ({ message }) => (
+  <div style={{
+    position: 'fixed',
+    top: '1rem',
+    right: '1rem',
+    zIndex: 9999
+  }}>
+    ⚠️ {message}
+  </div>
+);
+```
+
+### 選択基準
+
+| 状況 | 推奨手法 | CLS |
+|---|---|---|
+| 単一フィールド | opacity + min-height | 0.0 |
+| 短いフォーム | opacity + min-height | 0.0 |
+| 長いフォーム | 絶対配置 or トースト | 0.0 |
+| モバイル | トースト | 0.0 |
+
+---
+
 ## 📋 チェックリスト
 
 開発完了前に確認:
@@ -542,6 +675,9 @@ useEffect(() => {
 - [ ] バリデーションが適切にデバウンスされている
 - [ ] 不要な再レンダリングがない
 - [ ] 大量データでもスムーズ
+- [ ] **CLSスコア < 0.1（エラーメッセージでレイアウトシフトなし）**
+- [ ] **画像・動画に width/height 指定済み**
+- [ ] **フォント読み込みの最適化済み**
 
 ---
 

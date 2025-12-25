@@ -2487,6 +2487,297 @@ const useDebounce = (value, delay) => {
 
 ---
 
+### パターン5: レイアウトシフト防止（CLS対策）
+
+#### 概要
+
+エラーメッセージが表示される際に画面が下に伸びる「レイアウトシフト」は、UX上の大きな問題です。Google Core Web VitalsのCLS（Cumulative Layout Shift）スコアを改善し、ユーザー体験を向上させます。
+
+#### 問題点
+
+```typescript
+// ❌ 悪い例: display: none/block を使用
+<div className="error-message" style={{ display: error ? 'block' : 'none' }}>
+  {error}
+</div>
+```
+
+**悪影響:**
+- **CLS（Cumulative Layout Shift）スコアの悪化** (0.25以上 = 不良)
+- **ユーザーの視線が強制移動** → 認知負荷の増加
+- **次のフィールドの位置がずれる** → 誤クリックの原因
+- **プロフェッショナルでない印象**
+- **集中力の散漫** → 特に注意力が散りやすいユーザーに影響大
+
+#### 解決策1: スペース事前確保（推奨）★★★★★
+
+```typescript
+// ✅ 良い例: opacity + min-height でレイアウトシフトを防止
+const FormFieldWithStableLayout = () => {
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
+
+  const validateEmail = (value) => {
+    if (!value) return '';
+    if (!value.includes('@')) {
+      return '⚠️ メールアドレスには「@」が必要です';
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      return '⚠️ メールアドレスの形式が正しくありません（例: example@email.com）';
+    }
+    return '';
+  };
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setEmail(value);
+    setError(validateEmail(value));
+  };
+
+  return (
+    <div className="form-field">
+      <label htmlFor="email">
+        メールアドレス <span className="required">*</span>
+      </label>
+      <input
+        id="email"
+        type="email"
+        value={email}
+        onChange={handleChange}
+        className={error ? 'invalid' : ''}
+        aria-describedby="email-error"
+        aria-invalid={!!error}
+      />
+      {/* 常に領域を確保、opacityで表示制御 */}
+      <div 
+        id="email-error"
+        className={`error-message ${error ? 'show' : ''}`}
+        role="alert"
+        aria-live="polite"
+      >
+        {error || '\u00A0'} {/* 空の場合は非表示スペース */}
+      </div>
+    </div>
+  );
+};
+```
+
+#### CSS実装
+
+```css
+/* レイアウトシフト防止のためのスタイル */
+.form-field {
+  margin-bottom: 1.5rem;
+}
+
+.form-field input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+  border: 2px solid #e2e8f0;
+  font-size: 1rem;
+  transition: border-color 0.3s, background-color 0.3s;
+}
+
+.form-field input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-field input.invalid {
+  border-color: #ff5252;
+  background-color: #fff5f5;
+}
+
+/* エラーメッセージ用の固定スペースを確保 */
+.error-message {
+  font-size: 0.875rem;
+  color: #ff5252;
+  min-height: 1.5rem; /* 1行分の高さを確保 */
+  margin-bottom: 0.5rem;
+  transition: opacity 0.3s ease; /* スムーズな表示/非表示 */
+  opacity: 0; /* デフォルトは透明 */
+  display: block; /* 常に表示して領域確保 */
+}
+
+/* メッセージ表示時のみ不透明に */
+.error-message.show {
+  opacity: 1;
+}
+```
+
+#### CLS（Cumulative Layout Shift）の評価基準
+
+| スコア | 評価 | ユーザー体験 |
+|---|---|---|
+| **0.1未満** | ✅ 良好 | ストレスなし |
+| **0.1〜0.25** | ⚠️ 改善が必要 | やや気になる |
+| **0.25以上** | ❌ 不良 | イライラする |
+
+**目標:** CLSスコア **0.05以下**（優秀）
+
+#### 解決策2: 絶対配置
+
+```css
+.form-field {
+  position: relative;
+  margin-bottom: 3rem; /* エラーメッセージ分のスペース */
+}
+
+.error-message {
+  position: absolute;
+  bottom: -1.5rem; /* inputの下に固定配置 */
+  left: 0;
+  font-size: 0.875rem;
+  color: #ff5252;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.error-message.show {
+  opacity: 1;
+}
+```
+
+**メリット:**
+- レイアウトに一切影響しない
+- 複数フィールドでもスッキリ
+
+**デメリット:**
+- スクロール時にエラーが見えにくい場合がある
+
+#### 解決策3: トースト通知（複数フィールド向け）
+
+```typescript
+const ToastNotification = ({ message, type = 'error', onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div 
+      className={`toast toast-${type}`}
+      role="alert"
+      aria-live="assertive"
+      style={{
+        position: 'fixed',
+        top: '1rem',
+        right: '1rem',
+        zIndex: 9999,
+        animation: 'slideInRight 0.3s ease'
+      }}
+    >
+      <div className="toast-content">
+        <span className="toast-icon">
+          {type === 'error' ? '⚠️' : '✓'}
+        </span>
+        <span className="toast-message">{message}</span>
+        <button 
+          className="toast-close"
+          onClick={onClose}
+          aria-label="閉じる"
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+  );
+};
+```
+
+```css
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast {
+  min-width: 300px;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  background: white;
+}
+
+.toast-error {
+  border-left: 4px solid #ff5252;
+}
+
+.toast-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+```
+
+#### 推奨される選択基準
+
+| シチュエーション | 推奨手法 | CLSスコア | 実装難易度 |
+|---|---|---|---|
+| 単一フィールド（シンプル） | スペース事前確保 | ✅ 0.0 | 簡単 ⭐⭐⭐⭐⭐ |
+| 複数フィールド（短いフォーム） | スペース事前確保 | ✅ 0.0 | 簡単 ⭐⭐⭐⭐⭐ |
+| 複数フィールド（長いフォーム） | 絶対配置 or トースト | ✅ 0.0 | 中 ⭐⭐⭐☆☆ |
+| モバイル | トースト or 画面上部固定 | ✅ 0.0 | 中 ⭐⭐⭐☆☆ |
+| 認知負荷が気になる場合 | スペース事前確保 | ✅ 0.0 | 簡単 ⭐⭐⭐⭐⭐ |
+
+#### デジタル庁・WCAG 2.1との対応
+
+| 基準 | 達成レベル | 関連する達成基準 |
+|---|---|---|
+| **JIS X 8341-3:2016** | レベルAA | 3.2.1 フォーカス時（達成基準A） |
+| **WCAG 2.1** | レベルAA | 3.2.2 入力時（達成基準A） |
+| **Core Web Vitals** | 良好 | CLS < 0.1 |
+
+**デジタル庁のガイドライン:**
+- 予測可能性の確保
+- 視覚的な安定性
+- ユーザーの操作を妨げない
+
+#### パフォーマンス測定
+
+```javascript
+// CLSをプログラムで測定
+import { getCLS } from 'web-vitals';
+
+getCLS((metric) => {
+  console.log('CLS score:', metric.value);
+  // 0.1未満が目標
+  if (metric.value >= 0.1) {
+    console.warn('CLSスコアが高すぎます！改善が必要です。');
+  }
+});
+```
+
+**Lighthouse での確認:**
+1. Chrome DevTools を開く
+2. Lighthouse タブ
+3. "Generate report" をクリック
+4. "Cumulative Layout Shift" をチェック
+
+#### まとめ
+
+| 手法 | CLS | 実装難易度 | 認知負荷 | 推奨度 |
+|---|---|---|---|---|
+| `display: none/block` | ❌ 0.3+ | 簡単 | 高い | ⭐☆☆☆☆ |
+| `opacity + min-height` | ✅ 0.0 | 簡単 | 低い | ⭐⭐⭐⭐⭐ |
+| `position: absolute` | ✅ 0.0 | 中 | 低い | ⭐⭐⭐⭐☆ |
+| トースト通知 | ✅ 0.0 | 中〜高 | 中 | ⭐⭐⭐⭐☆ |
+
+**結論:** エラーメッセージ用のスペースを事前に確保し、`opacity`で表示/非表示を制御するのが最もシンプルで効果的です。
+
+---
+
 ## チェックリスト
 
 ### 認知負荷の軽減
