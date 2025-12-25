@@ -16,6 +16,48 @@ class InputFormatter {
         });
     }
     
+    // 半角カナ→全角カナ
+    static toFullWidthKana(str) {
+        const kanaMap = {
+            'ｶﾞ': 'ガ', 'ｷﾞ': 'ギ', 'ｸﾞ': 'グ', 'ｹﾞ': 'ゲ', 'ｺﾞ': 'ゴ',
+            'ｻﾞ': 'ザ', 'ｼﾞ': 'ジ', 'ｽﾞ': 'ズ', 'ｾﾞ': 'ゼ', 'ｿﾞ': 'ゾ',
+            'ﾀﾞ': 'ダ', 'ﾁﾞ': 'ヂ', 'ﾂﾞ': 'ヅ', 'ﾃﾞ': 'デ', 'ﾄﾞ': 'ド',
+            'ﾊﾞ': 'バ', 'ﾋﾞ': 'ビ', 'ﾌﾞ': 'ブ', 'ﾍﾞ': 'ベ', 'ﾎﾞ': 'ボ',
+            'ﾊﾟ': 'パ', 'ﾋﾟ': 'ピ', 'ﾌﾟ': 'プ', 'ﾍﾟ': 'ペ', 'ﾎﾟ': 'ポ',
+            'ｳﾞ': 'ヴ', 'ﾜﾞ': 'ヷ', 'ｦﾞ': 'ヺ',
+            'ｱ': 'ア', 'ｲ': 'イ', 'ｳ': 'ウ', 'ｴ': 'エ', 'ｵ': 'オ',
+            'ｶ': 'カ', 'ｷ': 'キ', 'ｸ': 'ク', 'ｹ': 'ケ', 'ｺ': 'コ',
+            'ｻ': 'サ', 'ｼ': 'シ', 'ｽ': 'ス', 'ｾ': 'セ', 'ｿ': 'ソ',
+            'ﾀ': 'タ', 'ﾁ': 'チ', 'ﾂ': 'ツ', 'ﾃ': 'テ', 'ﾄ': 'ト',
+            'ﾅ': 'ナ', 'ﾆ': 'ニ', 'ﾇ': 'ヌ', 'ﾈ': 'ネ', 'ﾉ': 'ノ',
+            'ﾊ': 'ハ', 'ﾋ': 'ヒ', 'ﾌ': 'フ', 'ﾍ': 'ヘ', 'ﾎ': 'ホ',
+            'ﾏ': 'マ', 'ﾐ': 'ミ', 'ﾑ': 'ム', 'ﾒ': 'メ', 'ﾓ': 'モ',
+            'ﾔ': 'ヤ', 'ﾕ': 'ユ', 'ﾖ': 'ヨ',
+            'ﾗ': 'ラ', 'ﾘ': 'リ', 'ﾙ': 'ル', 'ﾚ': 'レ', 'ﾛ': 'ロ',
+            'ﾜ': 'ワ', 'ｦ': 'ヲ', 'ﾝ': 'ン',
+            'ｧ': 'ァ', 'ｨ': 'ィ', 'ｩ': 'ゥ', 'ｪ': 'ェ', 'ｫ': 'ォ',
+            'ｯ': 'ッ', 'ｬ': 'ャ', 'ｭ': 'ュ', 'ｮ': 'ョ',
+            '｡': '。', '｢': '「', '｣': '」', '､': '、', '･': '・',
+            'ｰ': 'ー', 'ﾞ': '゛', 'ﾟ': '゜'
+        };
+        
+        let result = str;
+        // 濁点・半濁点付き文字を先に変換
+        Object.keys(kanaMap).forEach(key => {
+            if (key.length > 1) {
+                result = result.split(key).join(kanaMap[key]);
+            }
+        });
+        // 残りの文字を変換
+        Object.keys(kanaMap).forEach(key => {
+            if (key.length === 1) {
+                result = result.split(key).join(kanaMap[key]);
+            }
+        });
+        
+        return result;
+    }
+    
     // 区切り文字削除
     static removeSeparators(str) {
         return str.replace(/[-\s,、]/g, '');
@@ -41,6 +83,28 @@ class InputFormatter {
         result = result.toUpperCase();
         // スペース削除
         result = result.replace(/\s/g, '');
+        return result;
+    }
+    
+    // 会社名整形（新規追加）
+    static formatCompanyName(str) {
+        let result = str;
+        
+        // 1. 半角カナ→全角カナ（確実に正しい変換）
+        result = this.toFullWidthKana(result);
+        
+        // 2. 全角英数字→半角英数字（会社名のABC等）
+        result = this.toHalfWidthAlpha(this.toHalfWidthNumber(result));
+        
+        // 3. 前後の空白をトリム
+        result = result.trim();
+        
+        // 4. 連続する空白を1つに
+        result = result.replace(/\s+/g, ' ');
+        
+        // 5. 全角スペースを半角スペースに統一
+        result = result.replace(/　/g, ' ');
+        
         return result;
     }
 }
@@ -253,7 +317,7 @@ function renderForm() {
                 placeholder="例: 株式会社サンプル商事"
                 value="${formData.companyName}"
             >
-            <div class="hint-message show">💡 全角・半角どちらでもOK</div>
+            <div class="hint-message show">💡 半角カナは自動で全角に、英数字は半角に変換されます</div>
             <div class="error-message" id="companyName-error"></div>
             <div class="success-message" id="companyName-success"></div>
         </div>
@@ -466,6 +530,10 @@ function initFormInputs() {
 // ===== 自動修正を適用 =====
 function applyAutoCorrection(field, value) {
     switch(field) {
+        case 'companyName':
+            // 会社名: 半角カナ→全角カナ、全角英数→半角英数、スペース整理
+            return InputFormatter.formatCompanyName(value);
+            
         case 'invoiceNumber':
             // 請求書番号: 全角→半角、大文字化
             return InputFormatter.formatInvoiceNumber(value);
@@ -473,10 +541,6 @@ function applyAutoCorrection(field, value) {
         case 'amount':
             // 金額: 全角→半角、¥・カンマ削除
             return InputFormatter.cleanCurrency(value);
-            
-        case 'companyName':
-            // 会社名: そのまま（全角半角混在OK）
-            return value;
             
         default:
             return value;
