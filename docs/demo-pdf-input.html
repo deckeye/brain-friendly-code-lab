@@ -249,31 +249,22 @@
             background: #edf2f7;
         }
 
-        /* トグルボタン（右側の>>マーク） */
+        /* トグルボタン（右側のシェブロンマーク） */
         .overlay-toggle-btn {
             background: none;
             border: none;
             font-size: 1.5rem;
             color: var(--text);
             cursor: pointer;
-            transition: transform 0.3s;
             padding: 0.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: color 0.3s;
         }
 
         .overlay-toggle-btn:hover {
             color: var(--primary);
-        }
-
-        /* 展開時は上向き、最小化時は下向き */
-        .overlay-form.expanded .overlay-toggle-btn {
-            transform: rotate(90deg); /* >> を上向き ^ に */
-        }
-
-        .overlay-form.minimized .overlay-toggle-btn {
-            transform: rotate(-90deg); /* >> を下向き v に */
         }
 
         /* プログレスバッジ */

@@ -142,6 +142,12 @@ class InputFormatter {
                 // 日本語形式: 2025年12月25日
                 { regex: /^(\d{4})年(\d{1,2})月(\d{1,2})日$/, format: 'YYYY年MM月DD日' },
                 
+                // 欧州形式（ハイフン）: 25-01-2025 → 2025-01-25
+                { regex: /^(\d{1,2})-(\d{1,2})-(\d{4})$/, format: 'DD-MM-YYYY' },
+                
+                // 欧州形式（スラッシュ）: 25/01/2025 → 2025-01-25
+                { regex: /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, format: 'DD/MM/YYYY' },
+                
                 // 月日のみ: 12/25 → 今年の12月25日
                 { regex: /^(\d{1,2})\/(\d{1,2})$/, format: 'MM/DD' },
                 
@@ -161,13 +167,7 @@ class InputFormatter {
                 { regex: /^(\d{4})(\d{2})$/, format: 'YYYYMM' },
                 
                 // 日本語（月日のみ）: 12月25日 → 今年の12月25日
-                { regex: /^(\d{1,2})月(\d{1,2})日$/, format: 'MM月DD日' },
-                
-                // 欧州形式: 25/12/2025 → 2025-12-25
-                { regex: /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, format: 'DD/MM/YYYY' },
-                
-                // 米国形式: 12/25/2025 → 2025-12-25
-                { regex: /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, format: 'MM/DD/YYYY' }
+                { regex: /^(\d{1,2})月(\d{1,2})日$/, format: 'MM月DD日' }
             ];
             
             for (const pattern of patterns) {
@@ -320,15 +320,16 @@ class InputFormatter {
                 break;
                 
             case 'DD/MM/YYYY':
-                // 日が12より大きい場合は確実に日/月/年
+            case 'DD-MM-YYYY':
+                // 日が12より大きい場合は確実に日/月/年（欧州形式）
                 if (parseInt(match[1], 10) > 12) {
                     day = match[1].padStart(2, '0');
                     month = match[2].padStart(2, '0');
                     year = match[3];
                 } else {
-                    // 曖昧な場合は米国形式と仮定
-                    month = match[1].padStart(2, '0');
-                    day = match[2].padStart(2, '0');
+                    // 曖昧な場合は欧州形式と仮定（日-月-年）
+                    day = match[1].padStart(2, '0');
+                    month = match[2].padStart(2, '0');
                     year = match[3];
                 }
                 break;
@@ -570,6 +571,11 @@ function renderPDFContent() {
 
 // ===== フォームのレンダリング =====
 function renderForm() {
+    // 今日の日付を取得（プレースホルダー用）
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const todayDisplay = `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
+    
     return `
         <h3 style="margin-bottom: 1.5rem; color: var(--primary);">📝 データ入力</h3>
         
@@ -617,14 +623,31 @@ function renderForm() {
             <label class="form-label">
                 請求日 <span class="required">*</span>
             </label>
-            <input 
-                type="text" 
-                class="form-input" 
-                id="invoiceDate"
-                placeholder="例: 2025/12/25、令和6年12月25日、12/25"
-                value="${formData.invoiceDate}"
-            >
-            <div class="hint-message show">💡 和暦・西暦・様々な形式で入力OK（自動変換）</div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input 
+                    type="text" 
+                    class="form-input" 
+                    id="invoiceDate"
+                    placeholder="${todayDisplay} (今日)"
+                    value="${formData.invoiceDate}"
+                    style="flex: 1;"
+                    list="invoiceDate-datalist"
+                >
+                <input 
+                    type="date" 
+                    class="form-input" 
+                    id="invoiceDate-calendar"
+                    value="${formData.invoiceDate}"
+                    style="width: 150px;"
+                    title="カレンダーから選択"
+                >
+            </div>
+            <datalist id="invoiceDate-datalist">
+                <option value="${todayDisplay}">今日</option>
+                <option value="2025/12/25">2025/12/25</option>
+                <option value="令和6年12月25日">令和6年12月25日</option>
+            </datalist>
+            <div class="hint-message show">💡 推奨: YYYY/MM/DD、YYYY-MM-DD、和暦も対応</div>
             <div class="error-message" id="invoiceDate-error"></div>
             <div class="success-message" id="invoiceDate-success"></div>
         </div>
@@ -633,14 +656,31 @@ function renderForm() {
             <label class="form-label">
                 支払期日 <span class="required">*</span>
             </label>
-            <input 
-                type="text" 
-                class="form-input" 
-                id="dueDate"
-                placeholder="例: 2025/12/25、令和6年12月25日、12/25"
-                value="${formData.dueDate}"
-            >
-            <div class="hint-message show">💡 和暦・西暦・様々な形式で入力OK（自動変換）</div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input 
+                    type="text" 
+                    class="form-input" 
+                    id="dueDate"
+                    placeholder="${todayDisplay} (今日)"
+                    value="${formData.dueDate}"
+                    style="flex: 1;"
+                    list="dueDate-datalist"
+                >
+                <input 
+                    type="date" 
+                    class="form-input" 
+                    id="dueDate-calendar"
+                    value="${formData.dueDate}"
+                    style="width: 150px;"
+                    title="カレンダーから選択"
+                >
+            </div>
+            <datalist id="dueDate-datalist">
+                <option value="${todayDisplay}">今日</option>
+                <option value="2025/12/25">2025/12/25</option>
+                <option value="令和6年12月25日">令和6年12月25日</option>
+            </datalist>
+            <div class="hint-message show">💡 推奨: YYYY/MM/DD、YYYY-MM-DD、和暦も対応</div>
             <div class="error-message" id="dueDate-error"></div>
             <div class="success-message" id="dueDate-success"></div>
         </div>
@@ -710,6 +750,22 @@ function initOverlay() {
     // 状態管理: 'normal' (50%), 'expanded' (70%), 'minimized' (60px)
     let state = 'normal'; // 初期状態は50%
     
+    // アイコンを更新
+    function updateToggleIcon() {
+        if (!toggleBtn) return;
+        
+        if (state === 'normal') {
+            toggleBtn.textContent = '∨'; // シングルシェブロン（下）
+            toggleBtn.setAttribute('aria-label', 'フォームを最小化');
+        } else if (state === 'expanded') {
+            toggleBtn.textContent = '⏬'; // ダブルシェブロン（下）
+            toggleBtn.setAttribute('aria-label', 'フォームを最小化');
+        } else {
+            toggleBtn.textContent = '⏫'; // ダブルシェブロン（上）
+            toggleBtn.setAttribute('aria-label', 'フォームを開く');
+        }
+    }
+    
     // トグルボタンクリック
     if (toggleBtn) {
         toggleBtn.addEventListener('click', (e) => {
@@ -727,22 +783,21 @@ function initOverlay() {
     
     function toggleOverlay() {
         if (state === 'normal') {
-            // 50% → 70% に展開
+            // 50% → 60px に最小化
+            form.classList.add('minimized');
+            state = 'minimized';
+        } else if (state === 'minimized') {
+            // 60px → 70% に展開
             form.classList.remove('minimized');
             form.classList.add('expanded');
             state = 'expanded';
-        } else if (state === 'expanded') {
-            // 70% → 60px に最小化
-            form.classList.remove('expanded');
-            form.classList.add('minimized');
-            state = 'minimized';
         } else {
-            // 60px → 50% に戻す
-            form.classList.remove('minimized');
+            // 70% → 50% に戻す
+            form.classList.remove('expanded');
             state = 'normal';
         }
         
-        // プログレスバッジを更新
+        updateToggleIcon();
         updateProgressBadge();
     }
     
@@ -753,7 +808,8 @@ function initOverlay() {
         }
     }
     
-    // 初期バッジ更新
+    // 初期アイコン・バッジ更新
+    updateToggleIcon();
     updateProgressBadge();
 }
 
@@ -822,6 +878,54 @@ function initFormInputs() {
     const clearBtn = document.getElementById('clearBtn');
     if (clearBtn) {
         clearBtn.addEventListener('click', handleClear);
+    }
+    
+    // カレンダー入力との連携
+    const invoiceDateCalendar = document.getElementById('invoiceDate-calendar');
+    const invoiceDateText = document.getElementById('invoiceDate');
+    const dueDateCalendar = document.getElementById('dueDate-calendar');
+    const dueDateText = document.getElementById('dueDate');
+    
+    if (invoiceDateCalendar && invoiceDateText) {
+        // カレンダーからテキストへ
+        invoiceDateCalendar.addEventListener('change', (e) => {
+            const value = e.target.value; // YYYY-MM-DD形式
+            if (value) {
+                invoiceDateText.value = value;
+                formData.invoiceDate = value;
+                validateField('invoiceDate', value);
+                updateProgress();
+            }
+        });
+        
+        // テキストからカレンダーへ（自動修正後）
+        invoiceDateText.addEventListener('blur', () => {
+            const value = formData.invoiceDate;
+            if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                invoiceDateCalendar.value = value;
+            }
+        });
+    }
+    
+    if (dueDateCalendar && dueDateText) {
+        // カレンダーからテキストへ
+        dueDateCalendar.addEventListener('change', (e) => {
+            const value = e.target.value; // YYYY-MM-DD形式
+            if (value) {
+                dueDateText.value = value;
+                formData.dueDate = value;
+                validateField('dueDate', value);
+                updateProgress();
+            }
+        });
+        
+        // テキストからカレンダーへ（自動修正後）
+        dueDateText.addEventListener('blur', () => {
+            const value = formData.dueDate;
+            if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                dueDateCalendar.value = value;
+            }
+        });
     }
 }
 
