@@ -660,37 +660,43 @@ function renderForm() {
         <div class="form-group">
             <label class="form-label">
                 会社名 <span class="required">*</span>
-                <span class="tooltip">
-                    <span class="tooltip-icon">?</span>
-                    <span class="tooltip-content">PDFに記載されている会社名を入力</span>
-                </span>
             </label>
-            <input 
-                type="text" 
-                class="form-input" 
-                id="companyName"
-                placeholder="例: 株式会社サンプル商事"
-                value="${formData.companyName}"
-            >
-            <div class="hint-message show">💡 半角カナは自動で全角に、英数字は半角に変換されます</div>
-            <div class="error-message" id="companyName-error"></div>
-            <div class="success-message" id="companyName-success"></div>
+            <div class="form-field-wrapper">
+                <input 
+                    type="text" 
+                    class="form-input" 
+                    id="companyName"
+                    placeholder="例: 株式会社サンプル商事"
+                    value="${formData.companyName}"
+                >
+                <div class="inline-hint" data-hint="半角カナは自動で全角に、英数字は半角に変換されます">
+                    <span>半角カナ→全角、英数字→半角</span>
+                </div>
+                <div class="error-icon" id="companyName-error-icon" style="display: none;">⚠</div>
+                <div class="error-tooltip" id="companyName-error-tooltip"></div>
+                <div class="error-annotation" id="companyName-error-annotation"></div>
+            </div>
         </div>
         
         <div class="form-group">
             <label class="form-label">
                 請求書番号 <span class="required">*</span>
             </label>
-            <input 
-                type="text" 
-                class="form-input" 
-                id="invoiceNumber"
-                placeholder="例: INV-2025-001"
-                value="${formData.invoiceNumber}"
-            >
-            <div class="hint-message show">💡 自動で大文字・半角に変換されます</div>
-            <div class="error-message" id="invoiceNumber-error"></div>
-            <div class="success-message" id="invoiceNumber-success"></div>
+            <div class="form-field-wrapper">
+                <input 
+                    type="text" 
+                    class="form-input" 
+                    id="invoiceNumber"
+                    placeholder="例: INV-2025-001"
+                    value="${formData.invoiceNumber}"
+                >
+                <div class="inline-hint" data-hint="自動で大文字・半角に変換されます">
+                    <span>自動で大文字・半角</span>
+                </div>
+                <div class="error-icon" id="invoiceNumber-error-icon" style="display: none;">⚠</div>
+                <div class="error-tooltip" id="invoiceNumber-error-tooltip"></div>
+                <div class="error-annotation" id="invoiceNumber-error-annotation"></div>
+            </div>
         </div>
         
         <div class="form-group">
@@ -1093,6 +1099,35 @@ function initFormInputs() {
     
     // 設定モーダルの初期化
     initDateSettingsModal();
+    
+    // インラインヒントの初期化
+    initInlineHints();
+}
+
+// ===== インラインヒントの初期化 =====
+function initInlineHints() {
+    const hints = document.querySelectorAll('.inline-hint');
+    hints.forEach(hint => {
+        let isPinned = false;
+        
+        hint.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isPinned = !isPinned;
+            if (isPinned) {
+                hint.classList.add('active');
+            } else {
+                hint.classList.remove('active');
+            }
+        });
+        
+        // 他の場所をクリックしたらピン解除
+        document.addEventListener('click', () => {
+            if (isPinned && !hint.contains(event.target)) {
+                isPinned = false;
+                hint.classList.remove('active');
+            }
+        });
+    });
 }
 
 // ===== 日付設定モーダルの初期化 =====
@@ -1180,22 +1215,31 @@ function applyAutoCorrection(field, value) {
     }
 }
 
-// ===== フィールドバリデーション =====
+// ===== フィールドバリデーション（新UI対応） =====
 function validateField(field, value) {
-    const errorEl = document.getElementById(`${field}-error`);
-    const successEl = document.getElementById(`${field}-success`);
     const inputEl = document.getElementById(field);
+    const errorIcon = document.getElementById(`${field}-error-icon`);
+    const errorTooltip = document.getElementById(`${field}-error-tooltip`);
+    const errorAnnotation = document.getElementById(`${field}-error-annotation`);
+    const inlineHint = inputEl?.nextElementSibling;
     
-    if (!errorEl || !successEl || !inputEl) return;
+    if (!inputEl) return false;
     
-    // エラー・成功メッセージをリセット
-    errorEl.classList.remove('show');
-    successEl.classList.remove('show');
+    // エラー表示をリセット
     inputEl.classList.remove('valid', 'invalid');
+    if (errorIcon) errorIcon.style.display = 'none';
+    if (errorTooltip) {
+        errorTooltip.classList.remove('active');
+        errorTooltip.textContent = '';
+    }
+    if (errorAnnotation) {
+        errorAnnotation.classList.remove('show');
+        errorAnnotation.textContent = '';
+    }
     
     // 空の場合はスキップ（備考以外）
     if (!value && field !== 'notes') {
-        return;
+        return true;
     }
     
     let isValid = true;
@@ -1205,13 +1249,85 @@ function validateField(field, value) {
         case 'companyName':
             if (value.length < 2) {
                 isValid = false;
-                errorMessage = '⚠️ 会社名は2文字以上で入力してください';
+                errorMessage = '会社名は2文字以上で入力してください';
             }
             break;
             
         case 'invoiceNumber':
             if (!/^[A-Z]+-\d+-\d+$/.test(value)) {
                 isValid = false;
+                errorMessage = '形式: ABC-1234-567';
+            }
+            break;
+            
+        case 'invoiceDate':
+        case 'dueDate':
+            // 曖昧な日付チェック
+            if (value && value.startsWith('AMBIGUOUS:')) {
+                isValid = false;
+                const originalInput = value.substring(10);
+                errorMessage = `曖昧な形式: ${originalInput}\n\n推奨形式:\n• 2025/12/25\n• 2025-12-25\n• 令和7年12月25日\n\nまたは⚙️ボタンから優先フォーマットを設定`;
+            } else if (!value) {
+                isValid = false;
+                errorMessage = '日付を入力してください';
+            } else if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                isValid = false;
+                errorMessage = '正しい日付形式で入力してください（YYYY-MM-DD）';
+            }
+            break;
+            
+        case 'amount':
+            if (!/^\d+$/.test(value)) {
+                isValid = false;
+                errorMessage = '数字のみで入力してください';
+            } else if (parseInt(value) <= 0) {
+                isValid = false;
+                errorMessage = '金額は1以上で入力してください';
+            }
+            break;
+    }
+    
+    if (!isValid) {
+        // エラー表示
+        inputEl.classList.add('invalid');
+        if (errorIcon) errorIcon.style.display = 'block';
+        if (errorTooltip) errorTooltip.textContent = errorMessage;
+        if (errorAnnotation) {
+            errorAnnotation.textContent = '⚠️ ' + errorMessage;
+            errorAnnotation.classList.add('show');
+        }
+        
+        // エラーアイコンにイベントリスナーを追加
+        if (errorIcon) {
+            errorIcon.onclick = () => {
+                if (errorTooltip) {
+                    errorTooltip.classList.toggle('active');
+                }
+            };
+            errorIcon.onmouseenter = () => {
+                if (errorTooltip) {
+                    errorTooltip.classList.add('active');
+                }
+            };
+            errorIcon.onmouseleave = () => {
+                if (errorTooltip && !errorTooltip.classList.contains('pinned')) {
+                    errorTooltip.classList.remove('active');
+                }
+            };
+        }
+        
+        return false;
+    } else if (value) {
+        // 成功表示（控えめに）
+        inputEl.classList.add('valid');
+        return true;
+    }
+    
+    return true;
+}
+                errorMessage = '形式: ABC-1234-567';
+            }
+            break;
                 errorMessage = '⚠️ 形式が正しくありません（例: INV-2025-001）';
             }
             break;

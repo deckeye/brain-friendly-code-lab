@@ -426,6 +426,149 @@
             opacity: 1;
         }
 
+        /* フィールドラッパー（ヒント・エラー表示用） */
+        .form-field-wrapper {
+            position: relative;
+        }
+
+        /* インラインヒント（テキストボックス内右寄せ） */
+        .inline-hint {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.875rem;
+            color: var(--text-light);
+            opacity: 0.5;
+            pointer-events: none;
+            transition: all 0.3s;
+            white-space: nowrap;
+            max-width: 50%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 入力時はアイコンに変換 */
+        .form-input:focus + .inline-hint,
+        .form-input:not(:placeholder-shown) + .inline-hint {
+            right: 8px;
+            font-size: 1rem;
+            opacity: 0.7;
+            pointer-events: auto;
+            cursor: help;
+        }
+
+        .form-input:focus + .inline-hint::before,
+        .form-input:not(:placeholder-shown) + .inline-hint::before {
+            content: 'ⓘ';
+        }
+
+        .form-input:focus + .inline-hint > span,
+        .form-input:not(:placeholder-shown) + .inline-hint > span {
+            display: none;
+        }
+
+        /* ヒントホバー時のツールチップ */
+        .inline-hint.active,
+        .inline-hint:hover {
+            opacity: 1;
+            z-index: 10;
+        }
+
+        .inline-hint.active::after,
+        .inline-hint:hover::after {
+            content: attr(data-hint);
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: var(--text);
+            color: white;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            white-space: normal;
+            width: max-content;
+            max-width: 250px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            pointer-events: none;
+        }
+
+        /* エラー状態のフィールド */
+        .form-input.invalid {
+            background-color: #fff5f5;
+            border-color: var(--error);
+            border-width: 2px;
+            padding-right: 40px;
+        }
+
+        /* エラーアイコン */
+        .error-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--error);
+            font-size: 1.25rem;
+            cursor: pointer;
+            z-index: 5;
+            transition: all 0.3s;
+        }
+
+        .error-icon:hover {
+            transform: translateY(-50%) scale(1.2);
+        }
+
+        /* エラーツールチップ */
+        .error-tooltip {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: var(--error);
+            color: white;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            max-width: 300px;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+            z-index: 10;
+            display: none;
+            animation: slideIn 0.2s;
+        }
+
+        .error-tooltip.active {
+            display: block;
+        }
+
+        /* エラーアノテーション（下のオーバーレイ） */
+        .error-annotation {
+            margin-top: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: #fff5f5;
+            border: 2px solid var(--error);
+            border-radius: 6px;
+            color: var(--error);
+            font-size: 0.875rem;
+            display: none;
+            animation: slideIn 0.3s;
+        }
+
+        .error-annotation.show {
+            display: block;
+        }
+
+        /* 成功状態は控えめに */
+        .form-input.valid {
+            border-color: var(--success);
+        }
+
+        /* 古いスタイルを無効化 */
+        .error-message, .success-message, .hint-message {
+            display: none !important;
+        }
+
         /* PDF表示エリア */
         .pdf-viewer {
             background: #525659;
