@@ -86,7 +86,7 @@ class InputFormatter {
         return result;
     }
     
-    // 会社名整形（新規追加）
+    // 会社名整形
     static formatCompanyName(str) {
         let result = str;
         
@@ -106,6 +106,280 @@ class InputFormatter {
         result = result.replace(/　/g, ' ');
         
         return result;
+    }
+    
+    // 日付パーサー（様々なフォーマットに対応）
+    static parseDate(input) {
+        if (!input) return '';
+        
+        try {
+            // 1. 全角→半角変換
+            let normalized = this.toHalfWidthNumber(this.toHalfWidthAlpha(input));
+            
+            // 2. 和暦→西暦変換
+            normalized = this.convertWarekiToSeireki(normalized);
+            
+            // 3. 曜日を削除
+            normalized = normalized.replace(/\([月火水木金土日]\)/g, '');
+            
+            // 4. パターンマッチング
+            const patterns = [
+                // ISO形式: 2025-12-25
+                { regex: /^(\d{4})-(\d{1,2})-(\d{1,2})$/, format: 'YYYY-MM-DD' },
+                
+                // スラッシュ: 2025/12/25
+                { regex: /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/, format: 'YYYY/MM/DD' },
+                
+                // ドット: 2025.12.25
+                { regex: /^(\d{4})\.(\d{1,2})\.(\d{1,2})$/, format: 'YYYY.MM.DD' },
+                
+                // スペース: 2025 12 25
+                { regex: /^(\d{4})\s+(\d{1,2})\s+(\d{1,2})$/, format: 'YYYY MM DD' },
+                
+                // 8桁数字: 20251225
+                { regex: /^(\d{4})(\d{2})(\d{2})$/, format: 'YYYYMMDD' },
+                
+                // 日本語形式: 2025年12月25日
+                { regex: /^(\d{4})年(\d{1,2})月(\d{1,2})日$/, format: 'YYYY年MM月DD日' },
+                
+                // 月日のみ: 12/25 → 今年の12月25日
+                { regex: /^(\d{1,2})\/(\d{1,2})$/, format: 'MM/DD' },
+                
+                // 月日のみ: 12-25 → 今年の12月25日
+                { regex: /^(\d{1,2})-(\d{1,2})$/, format: 'MM-DD' },
+                
+                // 月日のみ: 1225 → 今年の12月25日
+                { regex: /^(\d{2})(\d{2})$/, format: 'MMDD' },
+                
+                // 年月のみ: 2025/12 → 2025-12-01
+                { regex: /^(\d{4})\/(\d{1,2})$/, format: 'YYYY/MM' },
+                
+                // 年月のみ: 2025-12 → 2025-12-01
+                { regex: /^(\d{4})-(\d{1,2})$/, format: 'YYYY-MM' },
+                
+                // 年月のみ: 202512 → 2025-12-01
+                { regex: /^(\d{4})(\d{2})$/, format: 'YYYYMM' },
+                
+                // 日本語（月日のみ）: 12月25日 → 今年の12月25日
+                { regex: /^(\d{1,2})月(\d{1,2})日$/, format: 'MM月DD日' },
+                
+                // 欧州形式: 25/12/2025 → 2025-12-25
+                { regex: /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, format: 'DD/MM/YYYY' },
+                
+                // 米国形式: 12/25/2025 → 2025-12-25
+                { regex: /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, format: 'MM/DD/YYYY' }
+            ];
+            
+            for (const pattern of patterns) {
+                const match = normalized.match(pattern.regex);
+                if (match) {
+                    return this.formatDateFromMatch(match, pattern.format);
+                }
+            }
+            
+            // 5. 相対日付（今日、明日、昨日）
+            if (/^(今日|きょう)$/.test(normalized)) {
+                return this.formatDateObject(new Date());
+            }
+            if (/^(明日|あした)$/.test(normalized)) {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                return this.formatDateObject(tomorrow);
+            }
+            if (/^(昨日|きのう)$/.test(normalized)) {
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                return this.formatDateObject(yesterday);
+            }
+            
+            // 6. 相対日付（+7、-7）
+            const relativeMatch = normalized.match(/^([+-])(\d+)$/);
+            if (relativeMatch) {
+                const days = parseInt(relativeMatch[2], 10);
+                const sign = relativeMatch[1];
+                const date = new Date();
+                date.setDate(date.getDate() + (sign === '+' ? days : -days));
+                return this.formatDateObject(date);
+            }
+            
+            // 7. フォールバック: そのまま返す（バリデーションでエラーにする）
+            return normalized;
+            
+        } catch (e) {
+            console.error('Date parse error:', e);
+            return input;
+        }
+    }
+    
+    // 和暦→西暦変換
+    static convertWarekiToSeireki(str) {
+        const warekiMap = {
+            '令和': 2018, // 令和元年 = 2019年
+            'R': 2018,
+            '平成': 1988, // 平成元年 = 1989年
+            'H': 1988,
+            '昭和': 1925, // 昭和元年 = 1926年
+            'S': 1925,
+            '大正': 1911, // 大正元年 = 1912年
+            'T': 1911,
+            '明治': 1867  // 明治元年 = 1868年
+        };
+        
+        for (const era in warekiMap) {
+            // 「令和6年12月25日」形式
+            let regex = new RegExp(`^${era}(\\d{1,2})年(\\d{1,2})月(\\d{1,2})日$`);
+            let match = str.match(regex);
+            if (match) {
+                const year = warekiMap[era] + parseInt(match[1], 10);
+                const month = match[2].padStart(2, '0');
+                const day = match[3].padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            
+            // 「R6.12.25」形式
+            regex = new RegExp(`^${era}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{1,2})$`);
+            match = str.match(regex);
+            if (match) {
+                const year = warekiMap[era] + parseInt(match[1], 10);
+                const month = match[2].padStart(2, '0');
+                const day = match[3].padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            
+            // 「R6/12/25」形式
+            regex = new RegExp(`^${era}(\\d{1,2})/(\\d{1,2})/(\\d{1,2})$`);
+            match = str.match(regex);
+            if (match) {
+                const year = warekiMap[era] + parseInt(match[1], 10);
+                const month = match[2].padStart(2, '0');
+                const day = match[3].padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            
+            // 「R6-12-25」形式
+            regex = new RegExp(`^${era}(\\d{1,2})-(\\d{1,2})-(\\d{1,2})$`);
+            match = str.match(regex);
+            if (match) {
+                const year = warekiMap[era] + parseInt(match[1], 10);
+                const month = match[2].padStart(2, '0');
+                const day = match[3].padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+        }
+        
+        return str;
+    }
+    
+    // マッチ結果からフォーマット
+    static formatDateFromMatch(match, format) {
+        const now = new Date();
+        let year, month, day;
+        
+        switch(format) {
+            case 'YYYY-MM-DD':
+            case 'YYYY/MM/DD':
+            case 'YYYY.MM.DD':
+            case 'YYYY MM DD':
+            case 'YYYY年MM月DD日':
+                year = match[1];
+                month = match[2].padStart(2, '0');
+                day = match[3].padStart(2, '0');
+                break;
+                
+            case 'YYYYMMDD':
+                year = match[1];
+                month = match[2];
+                day = match[3];
+                break;
+                
+            case 'MM/DD':
+            case 'MM-DD':
+            case 'MM月DD日':
+                year = now.getFullYear();
+                month = match[1].padStart(2, '0');
+                day = match[2].padStart(2, '0');
+                break;
+                
+            case 'MMDD':
+                year = now.getFullYear();
+                month = match[1];
+                day = match[2];
+                break;
+                
+            case 'YYYY/MM':
+            case 'YYYY-MM':
+                year = match[1];
+                month = match[2].padStart(2, '0');
+                day = '01';
+                break;
+                
+            case 'YYYYMM':
+                year = match[1];
+                month = match[2];
+                day = '01';
+                break;
+                
+            case 'DD/MM/YYYY':
+                // 日が12より大きい場合は確実に日/月/年
+                if (parseInt(match[1], 10) > 12) {
+                    day = match[1].padStart(2, '0');
+                    month = match[2].padStart(2, '0');
+                    year = match[3];
+                } else {
+                    // 曖昧な場合は米国形式と仮定
+                    month = match[1].padStart(2, '0');
+                    day = match[2].padStart(2, '0');
+                    year = match[3];
+                }
+                break;
+                
+            case 'MM/DD/YYYY':
+                month = match[1].padStart(2, '0');
+                day = match[2].padStart(2, '0');
+                year = match[3];
+                break;
+                
+            default:
+                return '';
+        }
+        
+        // バリデーション
+        if (!this.isValidDate(year, month, day)) {
+            return '';
+        }
+        
+        return `${year}-${month}-${day}`;
+    }
+    
+    // Dateオブジェクトからフォーマット
+    static formatDateObject(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+    
+    // 日付の妥当性チェック
+    static isValidDate(year, month, day) {
+        const y = parseInt(year, 10);
+        const m = parseInt(month, 10);
+        const d = parseInt(day, 10);
+        
+        if (y < 1900 || y > 2100) return false;
+        if (m < 1 || m > 12) return false;
+        if (d < 1 || d > 31) return false;
+        
+        // 月ごとの日数チェック
+        const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        
+        // うるう年チェック
+        if ((y % 4 === 0 && y % 100 !== 0) || y % 400 === 0) {
+            daysInMonth[1] = 29;
+        }
+        
+        if (d > daysInMonth[m - 1]) return false;
+        
+        return true;
     }
 }
 
@@ -343,12 +617,13 @@ function renderForm() {
                 請求日 <span class="required">*</span>
             </label>
             <input 
-                type="date" 
+                type="text" 
                 class="form-input" 
                 id="invoiceDate"
+                placeholder="例: 2025/12/25、令和6年12月25日、12/25"
                 value="${formData.invoiceDate}"
             >
-            <div class="hint-message show">💡 PDFの日付をYYYY-MM-DD形式で入力</div>
+            <div class="hint-message show">💡 和暦・西暦・様々な形式で入力OK（自動変換）</div>
             <div class="error-message" id="invoiceDate-error"></div>
             <div class="success-message" id="invoiceDate-success"></div>
         </div>
@@ -358,11 +633,13 @@ function renderForm() {
                 支払期日 <span class="required">*</span>
             </label>
             <input 
-                type="date" 
+                type="text" 
                 class="form-input" 
                 id="dueDate"
+                placeholder="例: 2025/12/25、令和6年12月25日、12/25"
                 value="${formData.dueDate}"
             >
+            <div class="hint-message show">💡 和暦・西暦・様々な形式で入力OK（自動変換）</div>
             <div class="error-message" id="dueDate-error"></div>
             <div class="success-message" id="dueDate-success"></div>
         </div>
@@ -537,6 +814,11 @@ function applyAutoCorrection(field, value) {
         case 'invoiceNumber':
             // 請求書番号: 全角→半角、大文字化
             return InputFormatter.formatInvoiceNumber(value);
+            
+        case 'invoiceDate':
+        case 'dueDate':
+            // 日付: 様々なフォーマットをYYYY-MM-DDに変換
+            return InputFormatter.parseDate(value);
             
         case 'amount':
             // 金額: 全角→半角、¥・カンマ削除
