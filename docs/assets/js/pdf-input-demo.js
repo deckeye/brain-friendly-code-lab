@@ -1,5 +1,53 @@
 // PDF入力アシスタント - デモ用JavaScript（自動修正機能付き）
 
+// ===== ユーザー設定管理 =====
+class UserSettings {
+    constructor() {
+        this.storageKey = 'pdfInputSettings';
+        this.settings = this.load();
+    }
+    
+    // 設定を読み込む
+    load() {
+        const saved = localStorage.getItem(this.storageKey);
+        if (saved) {
+            try {
+                return JSON.parse(saved);
+            } catch (e) {
+                console.error('Failed to parse settings:', e);
+            }
+        }
+        return this.getDefaults();
+    }
+    
+    // デフォルト設定
+    getDefaults() {
+        return {
+            dateFormat: 'auto',  // 'auto', 'jp' (MM-DD), 'eu' (DD-MM), 'us' (MM-DD)
+            autoExtractDates: true
+        };
+    }
+    
+    // 設定を保存
+    save() {
+        localStorage.setItem(this.storageKey, JSON.stringify(this.settings));
+    }
+    
+    // 設定を取得
+    get(key) {
+        return this.settings[key];
+    }
+    
+    // 設定を更新
+    set(key, value) {
+        this.settings[key] = value;
+        this.save();
+    }
+}
+
+// グローバルな設定インスタンス
+const userSettings = new UserSettings();
+
 // ===== 入力自動修正クラス =====
 class InputFormatter {
     // 全角数字→半角
@@ -206,6 +254,10 @@ class InputFormatter {
             return normalized;
             
         } catch (e) {
+            if (e.message === 'AMBIGUOUS_DATE') {
+                // 曖昧な日付の場合は特別なマーカーを返す
+                return 'AMBIGUOUS:' + input;
+            }
             console.error('Date parse error:', e);
             return input;
         }
@@ -321,15 +373,37 @@ class InputFormatter {
                 
             case 'DD/MM/YYYY':
             case 'DD-MM-YYYY':
-                // 日が12より大きい場合は確実に日/月/年（欧州形式）
-                if (parseInt(match[1], 10) > 12) {
+                // 曖昧さチェック: 両方の数値が12以下の場合
+                const firstNum = parseInt(match[1], 10);
+                const secondNum = parseInt(match[2], 10);
+                
+                if (firstNum <= 12 && secondNum <= 12) {
+                    // 曖昧！設定に従う
+                    const preference = userSettings.get('dateFormat');
+                    
+                    if (preference === 'eu') {
+                        // 欧州形式（DD-MM-YYYY）
+                        day = match[1].padStart(2, '0');
+                        month = match[2].padStart(2, '0');
+                        year = match[3];
+                    } else if (preference === 'us' || preference === 'jp') {
+                        // 米国/日本形式（MM-DD-YYYY）
+                        month = match[1].padStart(2, '0');
+                        day = match[2].padStart(2, '0');
+                        year = match[3];
+                    } else {
+                        // auto: 判別不能エラー
+                        throw new Error('AMBIGUOUS_DATE');
+                    }
+                } else if (firstNum > 12) {
+                    // 確実に欧州形式（日が12より大きい）
                     day = match[1].padStart(2, '0');
                     month = match[2].padStart(2, '0');
                     year = match[3];
                 } else {
-                    // 曖昧な場合は欧州形式と仮定（日-月-年）
-                    day = match[1].padStart(2, '0');
-                    month = match[2].padStart(2, '0');
+                    // 確実に米国形式（月が12より大きい）
+                    month = match[1].padStart(2, '0');
+                    day = match[2].padStart(2, '0');
                     year = match[3];
                 }
                 break;
@@ -622,6 +696,7 @@ function renderForm() {
         <div class="form-group">
             <label class="form-label">
                 請求日 <span class="required">*</span>
+                <button class="settings-btn" id="dateSettingsBtn" title="日付フォーマット設定">⚙️</button>
             </label>
             <div style="display: flex; gap: 0.5rem; align-items: center;">
                 <input 
@@ -647,7 +722,7 @@ function renderForm() {
                 <option value="2025/12/25">2025/12/25</option>
                 <option value="令和6年12月25日">令和6年12月25日</option>
             </datalist>
-            <div class="hint-message show">💡 推奨: YYYY/MM/DD、YYYY-MM-DD、和暦も対応</div>
+            <div class="hint-message show" id="invoiceDate-hint">💡 推奨: YYYY/MM/DD、YYYY-MM-DD、和暦も対応</div>
             <div class="error-message" id="invoiceDate-error"></div>
             <div class="success-message" id="invoiceDate-success"></div>
         </div>
@@ -719,6 +794,44 @@ function renderForm() {
             <button class="btn btn-secondary" id="clearBtn">
                 🔄 クリア
             </button>
+        </div>
+        
+        <!-- 日付フォーマット設定モーダル -->
+        <div class="modal" id="dateSettingsModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>⚙️ 日付フォーマット設定</h3>
+                    <button class="modal-close" id="closeSettingsModal">✕</button>
+                </div>
+                <div class="modal-body">
+                    <p style="margin-bottom: 1rem; color: var(--text-light);">
+                        曖昧な日付（例: 01-02-2025）の解釈方法を選択してください。
+                    </p>
+                    
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="dateFormat" value="auto" ${userSettings.get('dateFormat') === 'auto' ? 'checked' : ''}>
+                            <span>自動判別（曖昧な場合はエラー表示）</span>
+                        </label>
+                        
+                        <label class="radio-label">
+                            <input type="radio" name="dateFormat" value="jp" ${userSettings.get('dateFormat') === 'jp' ? 'checked' : ''}>
+                            <span>日本/米国形式を優先（MM-DD-YYYY）</span>
+                            <span class="example">例: 01-02-2025 → 2025年1月2日</span>
+                        </label>
+                        
+                        <label class="radio-label">
+                            <input type="radio" name="dateFormat" value="eu" ${userSettings.get('dateFormat') === 'eu' ? 'checked' : ''}>
+                            <span>欧州形式を優先（DD-MM-YYYY）</span>
+                            <span class="example">例: 01-02-2025 → 2025年2月1日</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="saveSettings">保存</button>
+                    <button class="btn btn-secondary" id="cancelSettings">キャンセル</button>
+                </div>
+            </div>
         </div>
     `;
 }
@@ -927,6 +1040,119 @@ function initFormInputs() {
             }
         });
     }
+    
+    // 日付フィールドのペースト処理（自動抽出）
+    const dateFields = [invoiceDateText, dueDateText].filter(Boolean);
+    dateFields.forEach(field => {
+        field.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const pastedText = e.clipboardData.getData('text');
+            
+            // 日付部分を抽出
+            const datePatterns = [
+                /(\d{4}[-/年]\d{1,2}[-/月]\d{1,2}日?)/,
+                /(\d{1,2}[-/]\d{1,2}[-/]\d{4})/,
+                /(令和|平成|昭和)\d{1,2}年\d{1,2}月\d{1,2}日/
+            ];
+            
+            let extractedDate = pastedText;
+            for (const pattern of datePatterns) {
+                const match = pastedText.match(pattern);
+                if (match) {
+                    extractedDate = match[1] || match[0];
+                    break;
+                }
+            }
+            
+            // 抽出した日付を設定
+            field.value = extractedDate;
+            
+            // 自動修正を適用
+            const fieldId = field.id;
+            const corrected = applyAutoCorrection(fieldId, extractedDate);
+            field.value = corrected;
+            formData[fieldId] = corrected;
+            validateField(fieldId, corrected);
+            updateProgress();
+            
+            // ヒント表示（抽出した場合）
+            if (extractedDate !== pastedText) {
+                const hintEl = document.getElementById(`${fieldId}-hint`);
+                if (hintEl) {
+                    const originalHint = hintEl.textContent;
+                    hintEl.textContent = `💡 「${pastedText}」から「${extractedDate}」を抽出しました`;
+                    hintEl.style.color = 'var(--success)';
+                    setTimeout(() => {
+                        hintEl.textContent = originalHint;
+                        hintEl.style.color = '';
+                    }, 3000);
+                }
+            }
+        });
+    });
+    
+    // 設定モーダルの初期化
+    initDateSettingsModal();
+}
+
+// ===== 日付設定モーダルの初期化 =====
+function initDateSettingsModal() {
+    const modal = document.getElementById('dateSettingsModal');
+    const openBtn = document.getElementById('dateSettingsBtn');
+    const closeBtn = document.getElementById('closeSettingsModal');
+    const saveBtn = document.getElementById('saveSettings');
+    const cancelBtn = document.getElementById('cancelSettings');
+    
+    if (!modal || !openBtn) return;
+    
+    // モーダルを開く
+    if (openBtn) {
+        openBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            modal.classList.add('active');
+        });
+    }
+    
+    // モーダルを閉じる
+    const closeModal = () => {
+        modal.classList.remove('active');
+    };
+    
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    
+    // 背景クリックで閉じる
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+    
+    // 保存ボタン
+    if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+            const selectedFormat = document.querySelector('input[name="dateFormat"]:checked');
+            if (selectedFormat) {
+                userSettings.set('dateFormat', selectedFormat.value);
+                
+                // 成功メッセージを表示
+                alert('設定を保存しました。\n\n曖昧な日付は選択した形式で解釈されます。');
+                closeModal();
+                
+                // 既存の日付フィールドを再検証
+                ['invoiceDate', 'dueDate'].forEach(fieldId => {
+                    const value = formData[fieldId];
+                    if (value) {
+                        const corrected = applyAutoCorrection(fieldId, value);
+                        const inputEl = document.getElementById(fieldId);
+                        if (inputEl) inputEl.value = corrected;
+                        formData[fieldId] = corrected;
+                        validateField(fieldId, corrected);
+                    }
+                });
+            }
+        });
+    }
 }
 
 // ===== 自動修正を適用 =====
@@ -992,9 +1218,32 @@ function validateField(field, value) {
             
         case 'invoiceDate':
         case 'dueDate':
-            if (!value) {
+            // 曖昧な日付チェック
+            if (value && value.startsWith('AMBIGUOUS:')) {
                 isValid = false;
-                errorMessage = '⚠️ 日付を選択してください';
+                const originalInput = value.substring(10); // "AMBIGUOUS:" を除去
+                const hintEl = document.getElementById(`${field}-hint`);
+                errorMessage = `⚠️ 曖昧な形式です
+「${originalInput}」は複数の解釈が可能です。
+
+推奨形式で入力してください:
+• 2025/12/25（日本形式）
+• 2025-12-25（ISO形式）
+• 令和7年12月25日
+
+または、右側の⚙️ボタンから優先フォーマットを設定してください。`;
+                
+                // ヒントメッセージを強調
+                if (hintEl) {
+                    hintEl.textContent = '⚙️ 曖昧な日付は設定で解釈方法を選択できます';
+                    hintEl.style.color = 'var(--warning)';
+                }
+            } else if (!value) {
+                isValid = false;
+                errorMessage = '⚠️ 日付を入力してください';
+            } else if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                isValid = false;
+                errorMessage = '⚠️ 正しい日付形式で入力してください（YYYY-MM-DD）';
             }
             break;
             
