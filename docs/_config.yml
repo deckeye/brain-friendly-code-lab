@@ -1,0 +1,18 @@
+# GitHub Pages Configuration for Brain-Friendly Code Lab
+
+# Exclude guidelines folder from Jekyll processing
+exclude:
+  - guidelines/
+
+# Theme
+theme: jekyll-theme-primer
+
+# Site settings
+title: Brain-Friendly Code Lab
+description: エラーを出さないUI設計のガイドライン
+baseurl: ""
+url: "https://deckeye.github.io/brain-friendly-code-lab"
+
+# Markdown
+markdown: kramdown
+
