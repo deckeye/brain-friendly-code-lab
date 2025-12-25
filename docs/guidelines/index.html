@@ -1,0 +1,254 @@
+---
+layout: default
+title: ガイドライン一覧
+---
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ガイドライン一覧 - Brain-Friendly Code Lab</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 3rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 3rem;
+            font-size: 1.1rem;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 2rem;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .guidelines-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .guideline-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .guideline-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .guideline-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .guideline-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #2d3748;
+        }
+        
+        .guideline-description {
+            color: #666;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+        
+        .guideline-link {
+            display: inline-block;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        
+        .guideline-link:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .category {
+            margin-top: 3rem;
+        }
+        
+        .category-title {
+            font-size: 1.75rem;
+            color: #667eea;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="back-link">← トップページに戻る</a>
+        
+        <h1>📚 ガイドライン一覧</h1>
+        <p class="subtitle">エラーを出さないUI設計の完全ガイド</p>
+        
+        <!-- 基本ガイドライン -->
+        <div class="category">
+            <h2 class="category-title">🎯 基本ガイドライン</h2>
+            <div class="guidelines-grid">
+                <div class="guideline-card">
+                    <div class="guideline-icon">📖</div>
+                    <h3 class="guideline-title">UI設計ガイドライン</h3>
+                    <p class="guideline-description">
+                        エラー防止とリカバリーの基本原則。1,500行以上の詳細な実装例とベストプラクティス。
+                    </p>
+                    <a href="UI_DESIGN_GUIDELINES_ERROR_PREVENTION.html" class="guideline-link">読む →</a>
+                </div>
+                
+                <div class="guideline-card">
+                    <div class="guideline-icon">⚡</div>
+                    <h3 class="guideline-title">クイックリファレンス</h3>
+                    <p class="guideline-description">
+                        開発中にすぐ参照できるチートシート。コピペで使えるスニペット集。
+                    </p>
+                    <a href="UI_DESIGN_QUICK_REFERENCE.html" class="guideline-link">見る →</a>
+                </div>
+                
+                <div class="guideline-card">
+                    <div class="guideline-icon">💼</div>
+                    <h3 class="guideline-title">実サービス事例集</h3>
+                    <p class="guideline-description">
+                        SmartDB、楽楽精算、Notionなど実際のサービスの優れた機能を分析。
+                    </p>
+                    <a href="UI_DESIGN_CASE_STUDIES.html" class="guideline-link">見る →</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 品質・パフォーマンス -->
+        <div class="category">
+            <h2 class="category-title">📊 品質・パフォーマンス</h2>
+            <div class="guidelines-grid">
+                <div class="guideline-card">
+                    <div class="guideline-icon">🎯</div>
+                    <h3 class="guideline-title">UI/UX品質指標</h3>
+                    <p class="guideline-description">
+                        CLS、LCP、INPなどCore Web Vitalsの優先順位と用途別最適化。
+                    </p>
+                    <a href="UI_UX_QUALITY_METRICS.html" class="guideline-link">読む →</a>
+                </div>
+                
+                <div class="guideline-card">
+                    <div class="guideline-icon">🔍</div>
+                    <h3 class="guideline-title">レイアウトシフト検証</h3>
+                    <p class="guideline-description">
+                        エラーメッセージ表示時のレイアウトシフト防止策の妥当性検証レポート。
+                    </p>
+                    <a href="LAYOUT_SHIFT_VALIDATION_REPORT.html" class="guideline-link">読む →</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 入力最適化 -->
+        <div class="category">
+            <h2 class="category-title">✏️ 入力最適化</h2>
+            <div class="guidelines-grid">
+                <div class="guideline-card">
+                    <div class="guideline-icon">🔧</div>
+                    <h3 class="guideline-title">入力自動修正ガイド</h3>
+                    <p class="guideline-description">
+                        全角・半角、大文字・小文字など、自動修正・自動整形の完全ガイド。
+                    </p>
+                    <a href="INPUT_AUTO_CORRECTION_GUIDE.html" class="guideline-link">読む →</a>
+                </div>
+                
+                <div class="guideline-card">
+                    <div class="guideline-icon">🏢</div>
+                    <h3 class="guideline-title">会社名自動整形</h3>
+                    <p class="guideline-description">
+                        会社名入力の自動整形ルールと実装例。
+                    </p>
+                    <a href="COMPANY_NAME_FORMATTING.html" class="guideline-link">読む →</a>
+                </div>
+                
+                <div class="guideline-card">
+                    <div class="guideline-icon">📅</div>
+                    <h3 class="guideline-title">日付フォーマット対応</h3>
+                    <p class="guideline-description">
+                        15種類以上の日付フォーマットに対応した変換ロジック。
+                    </p>
+                    <a href="DATE_FORMAT_PATTERNS.html" class="guideline-link">読む →</a>
+                </div>
+                
+                <div class="guideline-card">
+                    <div class="guideline-icon">🔧</div>
+                    <h3 class="guideline-title">IME入力問題の解決</h3>
+                    <p class="guideline-description">
+                        日本語IME入力時の「文字分身」問題とComposition Eventsを使った解決策。
+                    </p>
+                    <a href="IME_INPUT_FIX.html" class="guideline-link">読む →</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 実装事例 -->
+        <div class="category">
+            <h2 class="category-title">💡 実装事例</h2>
+            <div class="guidelines-grid">
+                <div class="guideline-card">
+                    <div class="guideline-icon">📄</div>
+                    <h3 class="guideline-title">PDF入力アシスタント設計</h3>
+                    <p class="guideline-description">
+                        PDFを見ながらデータ入力するWEBアプリの設計と実装。レスポンシブ対応。
+                    </p>
+                    <a href="PDF_INPUT_ASSISTANT_DESIGN.html" class="guideline-link">読む →</a>
+                </div>
+                
+                <div class="guideline-card">
+                    <div class="guideline-icon">📋</div>
+                    <h3 class="guideline-title">UX配慮事項レポート</h3>
+                    <p class="guideline-description">
+                        業務アプリケーション開発における包括的なUX配慮事項のまとめ。
+                    </p>
+                    <a href="USER_EXPERIENCE_CONSIDERATIONS_REPORT.html" class="guideline-link">読む →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

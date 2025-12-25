@@ -1,9 +1,5 @@
 # GitHub Pages Configuration for Brain-Friendly Code Lab
 
-# Exclude guidelines folder from Jekyll processing
-exclude:
-  - guidelines/
-
 # Theme
 theme: jekyll-theme-primer
 

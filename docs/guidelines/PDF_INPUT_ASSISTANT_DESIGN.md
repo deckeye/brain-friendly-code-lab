@@ -1,3 +1,9 @@
+---
+layout: default
+title: PDF閲覧しながらデータ入力するWEBアプリの設計
+---
+{% raw %}
+
 # 📄 PDF閲覧しながらデータ入力するWEBアプリの設計
 
 ## 🎯 課題認識
@@ -675,3 +681,4 @@ function highlightPDFField(field) {
 **最終更新: 2025年12月25日**
 **作成者: Brain-Friendly Code Lab**
 
+{% endraw %}

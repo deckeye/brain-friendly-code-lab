@@ -1,3 +1,9 @@
+---
+layout: default
+title: UI/UXクオリティ指標の優先順位と用途別最適化
+---
+{% raw %}
+
 # 🎯 UI/UXクオリティ指標の優先順位と用途別最適化
 
 ## 📊 結論: CLSは最優先か？
@@ -466,3 +472,4 @@ Eコマース        → LCP + CLS ⭐⭐⭐⭐⭐
 **最終更新: 2025年12月25日**
 **作成者: Brain-Friendly Code Lab**
 
+{% endraw %}

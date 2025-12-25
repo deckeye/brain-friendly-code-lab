@@ -1,3 +1,9 @@
+---
+layout: default
+title: 日付フォーマット対応ガイド
+---
+{% raw %}
+
 # 📅 日付フォーマット対応ガイド
 
 ## 🎯 業務アプリで対応すべき日付フォーマット一覧
@@ -286,4 +292,6 @@ parseDate("abcdef")       // → null
 
 **最終更新: 2025年12月25日**  
 **作成者: Brain-Friendly Code Lab**
+
+{% endraw %}
 
