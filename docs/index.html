@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="脳に優しい、誰もが使えるUI設計の実践ガイド。エラーゼロ、ストレスフリー、認知負荷最小化。">
+    <meta name="keywords" content="UI設計,UXデザイン,アクセシビリティ,認知負荷,フロントエンド,React">
+    <meta property="og:title" content="Brain-Friendly Code Lab - 脳に優しいUI設計ガイド">
+    <meta property="og:description" content="エラーを起こさせない、ミスからすぐ回復できる、誰もが使いやすいUI設計の実践ガイド">
+    <meta property="og:type" content="website">
+    <title>Brain-Friendly Code Lab | 脳に優しいUI設計ガイド</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <!-- ヘッダー -->
+    <header>
+        <nav>
+            <div class="logo">
+                <span>🧠</span>
+                <span>Brain-Friendly Code Lab</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#features">特徴</a></li>
+                <li><a href="#demo">デモ</a></li>
+                <li><a href="guidelines/">ガイドライン</a></li>
+                <li><a href="https://github.com/deckeye/brain-friendly-code-lab" target="_blank">GitHub</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- ヒーローセクション -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>🧠 Brain-Friendly Code Lab</h1>
+            <p class="hero-subtitle">脳に優しい、誰もが使えるUI設計</p>
+            <p class="hero-tagline">
+                エラーゼロ、ストレスフリー、認知負荷最小化<br>
+                すぐ使える実装ガイドとデモで学ぶ、次世代のUI設計
+            </p>
+            <div class="cta-buttons">
+                <a href="#demo" class="btn btn-primary">インタラクティブデモを見る</a>
+                <a href="guidelines/" class="btn btn-secondary">ガイドラインを読む</a>
+                <a href="https://github.com/deckeye/brain-friendly-code-lab" class="btn btn-secondary">GitHubで見る</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 特徴セクション -->
+    <section class="features" id="features">
+        <h2 class="section-title">4つの設計原則</h2>
+        <p class="section-subtitle">認知科学とUXデザインを融合した、実践的なアプローチ</p>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3 class="feature-title">エラーを起こさせない</h3>
+                <p class="feature-description">
+                    適切な制約と補助機能で、ミスが発生しにくい設計を実現。
+                    リアルタイムバリデーション、入力マスク、オートコンプリートなど。
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3 class="feature-title">エラーを早期発見</h3>
+                <p class="feature-description">
+                    入力直後にフィードバックを提供し、問題を即座に指摘。
+                    具体的なエラーメッセージで、修正方法を明確に。
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <h3 class="feature-title">簡単リカバリー</h3>
+                <p class="feature-description">
+                    自動保存、Undo/Redo、下書き保存で、ミスからすぐに回復。
+                    中断に強く、作業の継続性を保証。
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🧠</div>
+                <h3 class="feature-title">認知負荷を最小化</h3>
+                <p class="feature-description">
+                    情報を記憶させない、見れば分かるUI。
+                    段階的開示、視覚的手がかり、コンテキスト情報の常時表示。
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 統計セクション -->
+    <section class="stats">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number">50%</div>
+                <div class="stat-label">エラー率削減</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">35%</div>
+                <div class="stat-label">完了率向上</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">60%</div>
+                <div class="stat-label">復帰時間短縮</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">70%</div>
+                <div class="stat-label">認知負荷軽減</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- デモセクション -->
+    <section class="demo-section" id="demo">
+        <div class="demo-content">
+            <h2 class="section-title">Before / After デモ</h2>
+            <p class="section-subtitle">実際に触って、違いを体感してください</p>
+
+            <div class="demo-comparison">
+                <!-- Bad Example -->
+                <div class="demo-box bad">
+                    <div class="demo-label bad">❌ Before: 使いにくい例</div>
+                    <form class="demo-form" id="bad-form">
+                        <input type="text" placeholder="メールアドレス" id="bad-email">
+                        <div class="error-message" id="bad-error"></div>
+                        <p style="color: #cbd5e0; font-size: 0.875rem;">
+                            💭 エラーメッセージが不明確<br>
+                            💭 どう直せばいいか分からない<br>
+                            💭 フィードバックが遅い
+                        </p>
+                    </form>
+                </div>
+
+                <!-- Good Example -->
+                <div class="demo-box good">
+                    <div class="demo-label good">✅ After: 使いやすい例</div>
+                    <form class="demo-form" id="good-form">
+                        <label style="display: block; margin-bottom: 0.5rem; color: white;">
+                            メールアドレス <span style="color: var(--error);">*</span>
+                        </label>
+                        <input 
+                            type="email" 
+                            placeholder="example@email.com" 
+                            id="good-email"
+                            aria-describedby="good-hint good-error"
+                        >
+                        <div style="color: #a0aec0; font-size: 0.875rem; margin-bottom: 1rem;" id="good-hint">
+                            💡 例: yamada@example.com
+                        </div>
+                        <div class="error-message" id="good-error" role="alert"></div>
+                        <div class="success-message" id="good-success" role="status"></div>
+                        <p style="color: #cbd5e0; font-size: 0.875rem;">
+                            ✨ リアルタイムフィードバック<br>
+                            ✨ 具体的なエラーメッセージ<br>
+                            ✨ 入力例を表示
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ガイドラインセクション -->
+    <section class="features" id="guidelines">
+        <h2 class="section-title">充実のドキュメント</h2>
+        <p class="section-subtitle">すぐに使える実装ガイドとコードスニペット</p>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📚</div>
+                <h3 class="feature-title">詳細ガイドライン</h3>
+                <p class="feature-description">
+                    1,500行以上の実装例とベストプラクティス。
+                    React/TypeScript、CSS、アニメーション含む。
+                </p>
+                <a href="guidelines/" class="btn btn-primary" style="margin-top: 1rem; display: inline-block;">読む →</a>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3 class="feature-title">クイックリファレンス</h3>
+                <p class="feature-description">
+                    開発中にすぐ参照できるチートシート。
+                    コピペで使えるスニペット集。
+                </p>
+                <a href="guidelines/" class="btn btn-primary" style="margin-top: 1rem; display: inline-block;">見る →</a>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">💼</div>
+                <h3 class="feature-title">実サービス事例</h3>
+                <p class="feature-description">
+                    SmartDB、楽楽精算、Notionなど、
+                    実際のサービスの優れた機能を分析。
+                </p>
+                <a href="guidelines/" class="btn btn-primary" style="margin-top: 1rem; display: inline-block;">見る →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTAセクション -->
+    <section class="cta-section">
+        <h2>今すぐ始めよう</h2>
+        <p>GitHubでStar⭐して、最新の更新をチェック</p>
+        <div class="cta-buttons">
+            <a href="https://github.com/deckeye/brain-friendly-code-lab" class="btn btn-primary">
+                GitHub で見る
+            </a>
+            <a href="https://twitter.com/intent/tweet?text=Brain-Friendly%20Code%20Lab%20-%20脳に優しいUI設計ガイド&url=https://deckeye.github.io/brain-friendly-code-lab" class="btn btn-secondary">
+                Twitterでシェア
+            </a>
+        </div>
+    </section>
+
+    <!-- フッター -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#features">特徴</a>
+                <a href="#demo">デモ</a>
+                <a href="guidelines/">ガイドライン</a>
+                <a href="https://github.com/deckeye/brain-friendly-code-lab">GitHub</a>
+            </div>
+            <p class="copyright">
+                © 2025 Jumbo's Brain-Friendly Code Lab. Licensed under MIT.
+            </p>
+        </div>
+    </footer>
+
+    <script src="assets/js/main.js"></script>
+</body>
+</html>
+
