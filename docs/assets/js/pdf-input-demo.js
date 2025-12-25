@@ -395,33 +395,59 @@ function initOverlay() {
     });
 }
 
-// ===== フォーム入力の初期化（自動修正機能付き） =====
+// ===== フォーム入力の初期化（自動修正機能付き・IME対応） =====
 function initFormInputs() {
     const inputs = document.querySelectorAll('.form-input');
     
     inputs.forEach(input => {
-        // リアルタイムバリデーション + 自動修正
+        // IME入力中フラグ
+        let isComposing = false;
+        
+        // IME変換開始
+        input.addEventListener('compositionstart', () => {
+            isComposing = true;
+        });
+        
+        // IME変換終了
+        input.addEventListener('compositionend', (e) => {
+            isComposing = false;
+            // 変換確定後に自動修正を適用
+            handleInput(e);
+        });
+        
+        // 通常の入力イベント
         input.addEventListener('input', (e) => {
+            // IME変換中はスキップ
+            if (isComposing) {
+                return;
+            }
+            handleInput(e);
+        });
+        
+        // 入力処理
+        function handleInput(e) {
             const field = e.target.id;
             let value = e.target.value;
             
             // 自動修正を適用
-            value = applyAutoCorrection(field, value);
+            const correctedValue = applyAutoCorrection(field, value);
             
             // 修正後の値を設定（カーソル位置を保持）
-            if (e.target.value !== value) {
+            if (e.target.value !== correctedValue) {
                 const cursorPos = e.target.selectionStart;
-                e.target.value = value;
-                e.target.setSelectionRange(cursorPos, cursorPos);
+                e.target.value = correctedValue;
+                // カーソル位置を調整（文字数の変化を考慮）
+                const diff = correctedValue.length - value.length;
+                e.target.setSelectionRange(cursorPos + diff, cursorPos + diff);
             }
             
-            formData[field] = value;
-            validateField(field, value);
+            formData[field] = correctedValue;
+            validateField(field, correctedValue);
             updateProgress();
             
             // タブのラベル更新（タブレイアウトの場合）
             updateTabLabels();
-        });
+        }
     });
     
     // 送信ボタン
