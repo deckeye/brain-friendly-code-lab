@@ -660,6 +660,7 @@ function renderForm() {
         <div class="form-group">
             <label class="form-label">
                 会社名 <span class="required">*</span>
+                <span class="hint-icon" title="半角カナは自動で全角に、英数字は半角に変換されます">ⓘ</span>
             </label>
             <div class="form-field-wrapper">
                 <input 
@@ -669,9 +670,6 @@ function renderForm() {
                     placeholder="例: 株式会社サンプル商事"
                     value="${formData.companyName}"
                 >
-                <div class="inline-hint" data-hint="半角カナは自動で全角に、英数字は半角に変換されます">
-                    <span>半角カナ→全角、英数字→半角</span>
-                </div>
                 <div class="error-icon" id="companyName-error-icon" style="display: none;">⚠</div>
                 <div class="error-tooltip" id="companyName-error-tooltip"></div>
                 <div class="error-annotation" id="companyName-error-annotation"></div>
@@ -681,6 +679,7 @@ function renderForm() {
         <div class="form-group">
             <label class="form-label">
                 請求書番号 <span class="required">*</span>
+                <span class="hint-icon" title="自動で大文字・半角に変換されます">ⓘ</span>
             </label>
             <div class="form-field-wrapper">
                 <input 
@@ -690,9 +689,6 @@ function renderForm() {
                     placeholder="例: INV-2025-001"
                     value="${formData.invoiceNumber}"
                 >
-                <div class="inline-hint" data-hint="自動で大文字・半角に変換されます">
-                    <span>自動で大文字・半角</span>
-                </div>
                 <div class="error-icon" id="invoiceNumber-error-icon" style="display: none;">⚠</div>
                 <div class="error-tooltip" id="invoiceNumber-error-tooltip"></div>
                 <div class="error-annotation" id="invoiceNumber-error-annotation"></div>
@@ -702,6 +698,7 @@ function renderForm() {
         <div class="form-group">
             <label class="form-label">
                 請求日 <span class="required">*</span>
+                <span class="hint-icon" title="推奨: YYYY/MM/DD、YYYY-MM-DD、和暦も対応">ⓘ</span>
                 <button class="settings-btn" id="dateSettingsBtn" title="日付フォーマット設定">⚙️</button>
             </label>
             <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -714,9 +711,6 @@ function renderForm() {
                         value="${formData.invoiceDate}"
                         list="invoiceDate-datalist"
                     >
-                    <div class="inline-hint" data-hint="推奨: YYYY/MM/DD、YYYY-MM-DD、和暦も対応">
-                        <span>和暦・西暦対応</span>
-                    </div>
                     <div class="error-icon" id="invoiceDate-error-icon" style="display: none;">⚠</div>
                     <div class="error-tooltip" id="invoiceDate-error-tooltip"></div>
                     <div class="error-annotation" id="invoiceDate-error-annotation"></div>
@@ -740,6 +734,7 @@ function renderForm() {
         <div class="form-group">
             <label class="form-label">
                 支払期日 <span class="required">*</span>
+                <span class="hint-icon" title="推奨: YYYY/MM/DD、YYYY-MM-DD、和暦も対応">ⓘ</span>
             </label>
             <div style="display: flex; gap: 0.5rem; align-items: center;">
                 <div class="form-field-wrapper" style="flex: 1;">
@@ -751,9 +746,6 @@ function renderForm() {
                         value="${formData.dueDate}"
                         list="dueDate-datalist"
                     >
-                    <div class="inline-hint" data-hint="推奨: YYYY/MM/DD、YYYY-MM-DD、和暦も対応">
-                        <span>和暦・西暦対応</span>
-                    </div>
                     <div class="error-icon" id="dueDate-error-icon" style="display: none;">⚠</div>
                     <div class="error-tooltip" id="dueDate-error-tooltip"></div>
                     <div class="error-annotation" id="dueDate-error-annotation"></div>
@@ -777,6 +769,7 @@ function renderForm() {
         <div class="form-group">
             <label class="form-label">
                 金額 <span class="required">*</span>
+                <span class="hint-icon" title="¥や,（カンマ）は自動で削除されます">ⓘ</span>
             </label>
             <div class="form-field-wrapper">
                 <input 
@@ -786,9 +779,6 @@ function renderForm() {
                     placeholder="例: 1250000"
                     value="${formData.amount}"
                 >
-                <div class="inline-hint" data-hint="¥や,（カンマ）は自動で削除されます">
-                    <span>¥・カンマ自動削除</span>
-                </div>
                 <div class="error-icon" id="amount-error-icon" style="display: none;">⚠</div>
                 <div class="error-tooltip" id="amount-error-tooltip"></div>
                 <div class="error-annotation" id="amount-error-annotation"></div>
@@ -1111,35 +1101,6 @@ function initFormInputs() {
     
     // 設定モーダルの初期化
     initDateSettingsModal();
-    
-    // インラインヒントの初期化
-    initInlineHints();
-}
-
-// ===== インラインヒントの初期化 =====
-function initInlineHints() {
-    const hints = document.querySelectorAll('.inline-hint');
-    hints.forEach(hint => {
-        let isPinned = false;
-        
-        hint.addEventListener('click', (e) => {
-            e.stopPropagation();
-            isPinned = !isPinned;
-            if (isPinned) {
-                hint.classList.add('active');
-            } else {
-                hint.classList.remove('active');
-            }
-        });
-        
-        // 他の場所をクリックしたらピン解除
-        document.addEventListener('click', (e) => {
-            if (isPinned && !hint.contains(e.target)) {
-                isPinned = false;
-                hint.classList.remove('active');
-            }
-        });
-    });
 }
 
 // ===== 日付設定モーダルの初期化 =====
